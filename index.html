@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Please Hold — Your Call Is Important To Us</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0e1a;
+      --surface: #111827;
+      --surface-2: #1a2236;
+      --accent: #3b82f6;
+      --accent-dim: #1e3a5f;
+      --text: #e2e8f0;
+      --text-dim: #64748b;
+      --green: #22c55e;
+      --red: #ef4444;
+      --amber: #f59e0b;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* === LANDING SCREEN === */
+    #landing {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+      animation: fadeIn 0.5s ease;
+    }
+
+    #landing h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    #landing p {
+      color: var(--text-dim);
+      font-size: 1rem;
+      margin-bottom: 2.5rem;
+      max-width: 420px;
+      line-height: 1.6;
+    }
+
+    .call-btn {
+      background: var(--green);
+      color: #fff;
+      border: none;
+      padding: 1rem 2.5rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: all 0.2s;
+      box-shadow: 0 0 30px rgba(34, 197, 94, 0.3);
+    }
+
+    .call-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 50px rgba(34, 197, 94, 0.4);
+    }
+
+    .call-btn svg { width: 24px; height: 24px; }
+
+    /* === HOLD SCREEN === */
+    #hold-screen {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+
+    /* Top bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+      50% { opacity: 0.7; box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+    }
+
+    .queue-info {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    /* Main content */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      gap: 1.5rem;
+      position: relative;
+    }
+
+    /* Timer */
+    .timer-section {
+      text-align: center;
+    }
+
+    .timer-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      margin-bottom: 0.5rem;
+    }
+
+    .timer {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 4rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      background: linear-gradient(180deg, var(--text) 0%, var(--text-dim) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Announcement area */
+    .announcement-container {
+      width: 100%;
+      max-width: 600px;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .announcement {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 1.25rem 1.75rem;
+      text-align: center;
+      width: 100%;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.4s ease;
+    }
+
+    .announcement.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .announcement-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .announcement-text {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    /* Equalizer */
+    .equalizer {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 32px;
+      margin: 0.5rem 0;
+    }
+
+    .eq-bar {
+      width: 4px;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: height 0.15s ease;
+      opacity: 0.7;
+    }
+
+    /* Spotify embed */
+    .player-wrapper {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .player-wrapper iframe {
+      border-radius: 12px;
+    }
+
+    /* Hang up button */
+    .bottom-bar {
+      padding: 1.25rem;
+      display: flex;
+      justify-content: center;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .hangup-btn {
+      background: var(--red);
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .hangup-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+    }
+
+    .hangup-btn svg { width: 20px; height: 20px; }
+
+    /* Hang up modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-overlay.visible { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .modal h2 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal p {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
+    .modal-btn {
+      padding: 0.6rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .modal-btn.stay {
+      background: var(--accent);
+      color: white;
+    }
+
+    .modal-btn.leave {
+      background: var(--surface-2);
+      color: var(--text-dim);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .modal-btn:hover { transform: scale(1.03); }
+
+    /* Background ambient animation */
+    .bg-glow {
+      position: fixed;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      filter: blur(150px);
+      opacity: 0.07;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .bg-glow-1 {
+      background: var(--accent);
+      top: -200px;
+      right: -100px;
+      animation: drift1 20s ease infinite;
+    }
+
+    .bg-glow-2 {
+      background: #8b5cf6;
+      bottom: -200px;
+      left: -100px;
+      animation: drift2 25s ease infinite;
+    }
+
+    @keyframes drift1 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-80px, 80px); }
+    }
+
+    @keyframes drift2 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(80px, -60px); }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <!-- LANDING -->
+  <div id="landing">
+    <h1>Customer Support</h1>
+    <p>All of our representatives are currently assisting other customers. Press the button below to be connected to the next available agent.</p>
+    <button class="call-btn" onclick="startCall()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+      Call Now
+    </button>
+  </div>
+
+  <!-- HOLD SCREEN -->
+  <div id="hold-screen">
+    <div class="top-bar">
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        <span>On Hold</span>
+      </div>
+      <div class="queue-info">Queue position: <span id="queue-pos">14</span></div>
+    </div>
+
+    <div class="main-content">
+      <div class="timer-section">
+        <div class="timer-label">Time on hold</div>
+        <div class="timer" id="timer">00:00:00</div>
+      </div>
+
+      <div class="equalizer" id="equalizer"></div>
+
+      <div class="announcement-container">
+        <div class="announcement" id="announcement">
+          <div class="announcement-text" id="announcement-text"></div>
+        </div>
+      </div>
+
+      <div class="player-wrapper">
+        <iframe
+          id="spotify-player"
+          style="border-radius:12px"
+          src=""
+          width="100%"
+          height="152"
+          frameBorder="0"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+        ></iframe>
+      </div>
+    </div>
+
+    <div class="bottom-bar">
+      <button class="hangup-btn" onclick="tryHangUp()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 003.41 2.6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        Hang Up
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <h2>Are you sure?</h2>
+      <p id="modal-text">Your call is very important to us. If you hang up now, you'll lose your place in line.</p>
+      <div class="modal-buttons">
+        <button class="modal-btn stay" onclick="closeModal()">Stay on the line</button>
+        <button class="modal-btn leave" onclick="actuallyHangUp()">Hang up</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // === STATE ===
+    let timerInterval;
+    let announcementInterval;
+    let queueInterval;
+    let eqInterval;
+    let seconds = 0;
+    let hangUpAttempts = 0;
+    let queuePos = 14;
+
+    // === ANNOUNCEMENTS ===
+    const announcements = [
+      "Due to high call volume, your call will be answered in the order it was received.",
+      "All of our representatives are currently busy. Please stay on the line.",
+      "Your call is important to us. Please continue to hold.",
+      "We are experiencing higher than normal call volumes. Your estimated wait time is... 47 minutes.",
+      "Thank you for your patience. A representative will be with you shortly.",
+      "Did you know? You can visit our website for frequently asked questions.",
+      "For your convenience, our office hours are Monday through Friday, 9 AM to 5 PM Eastern.",
+      "Please have your 16-digit account number ready when a representative answers.",
+      "Your call may be recorded for quality assurance and training purposes.",
+      "We appreciate your business. Please continue to hold for the next available representative.",
+      "A representative will be with you in approximately... 32 minutes.",
+      "We apologize for the extended wait. All agents are currently assisting other customers.",
+      "Did you know you can manage your account online? Visit our website at www—",
+      "Thank you for holding. Your patronage is very important to us.",
+      "Please note that our menu options have recently changed.",
+      "You are caller number... 14... in the queue.",
+      "For faster service, please try calling back during non-peak hours.",
+      "We value your loyalty. A customer service representative will be available shortly.",
+      "This call may be monitored for quality assurance purposes.",
+      "Don't hang up! You're next in line... probably.",
+      "Our representatives are working hard to assist everyone in the order they called.",
+      "We know your time is valuable. That's why we're testing your patience for free.",
+      "Your estimated wait time has been updated to... 53 minutes.",
+      "If you'd like to leave a voicemail, press 1. Just kidding, that option doesn't work.",
+    ];
+
+    const hangUpMessages = [
+      "Your call is very important to us. If you hang up now, you'll lose your place in line.",
+      "You've already waited this long! A representative could answer any moment now.",
+      "We're so close to connecting you. Please reconsider.",
+      "Hanging up means starting over from the back of the queue. Stay strong.",
+      "Our records show you've called 3 times today. Maybe the 4th time is the charm?",
+      "A representative literally just became available. Just kidding. But maybe soon!",
+    ];
+
+    // === TIMER ===
+    function updateTimer() {
+      seconds++;
+      const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+      const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+      const s = String(seconds % 60).padStart(2, '0');
+      document.getElementById('timer').textContent = `${h}:${m}:${s}`;
+    }
+
+    // === QUEUE POSITION ===
+    function updateQueue() {
+      // Occasionally move forward, sometimes back
+      const roll = Math.random();
+      if (roll < 0.4) {
+        queuePos = Math.max(2, queuePos - 1);
+      } else if (roll < 0.55) {
+        queuePos = Math.min(30, queuePos + Math.floor(Math.random() * 3) + 1);
+      }
+      document.getElementById('queue-pos').textContent = queuePos;
+    }
+
+    // === ANNOUNCEMENTS ===
+    let lastAnnouncementIdx = -1;
+    function showAnnouncement() {
+      let idx;
+      do {
+        idx = Math.floor(Math.random() * announcements.length);
+      } while (idx === lastAnnouncementIdx);
+      lastAnnouncementIdx = idx;
+
+      const el = document.getElementById('announcement');
+      const textEl = document.getElementById('announcement-text');
+
+      el.classList.remove('visible');
+
+      setTimeout(() => {
+        textEl.textContent = announcements[idx];
+        el.classList.add('visible');
+
+        // Try speech synthesis for that authentic hold vibe
+        if ('speechSynthesis' in window) {
+          const utter = new SpeechSynthesisUtterance(announcements[idx]);
+          utter.rate = 0.9;
+          utter.pitch = 0.8;
+          utter.volume = 0.6;
+          // Pick a boring voice if available
+          const voices = speechSynthesis.getVoices();
+          const boring = voices.find(v => v.name.includes('Daniel') || v.name.includes('Samantha') || v.name.includes('Google US'));
+          if (boring) utter.voice = boring;
+          speechSynthesis.speak(utter);
+        }
+      }, 300);
+
+      // Hide after 8 seconds
+      setTimeout(() => {
+        el.classList.remove('visible');
+      }, 8000);
+    }
+
+    // === EQUALIZER ===
+    function setupEqualizer() {
+      const eq = document.getElementById('equalizer');
+      for (let i = 0; i < 16; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'eq-bar';
+        bar.style.height = '4px';
+        eq.appendChild(bar);
+      }
+      eqInterval = setInterval(() => {
+        const bars = eq.children;
+        for (let bar of bars) {
+          const h = Math.random() * 28 + 4;
+          bar.style.height = h + 'px';
+        }
+      }, 150);
+    }
+
+    // === START CALL ===
+    function startCall() {
+      document.getElementById('landing').style.display = 'none';
+      const holdScreen = document.getElementById('hold-screen');
+      holdScreen.style.display = 'flex';
+
+      // Start Spotify
+      document.getElementById('spotify-player').src =
+        'https://open.spotify.com/embed/playlist/5J6K64st0CCOblZPSpvp34?utm_source=generator&theme=0&autoplay=1';
+
+      // Start timer
+      timerInterval = setInterval(updateTimer, 1000);
+
+      // Queue updates every 30-60s
+      queueInterval = setInterval(updateQueue, 30000 + Math.random() * 30000);
+
+      // Announcements every 20-40 seconds
+      setTimeout(() => {
+        showAnnouncement();
+        announcementInterval = setInterval(showAnnouncement, 20000 + Math.random() * 20000);
+      }, 5000);
+
+      setupEqualizer();
+
+      // Load voices for speech synthesis
+      if ('speechSynthesis' in window) {
+        speechSynthesis.getVoices();
+      }
+    }
+
+    // === HANG UP ===
+    function tryHangUp() {
+      const msgIdx = Math.min(hangUpAttempts, hangUpMessages.length - 1);
+      document.getElementById('modal-text').textContent = hangUpMessages[msgIdx];
+      document.getElementById('modal').classList.add('visible');
+      hangUpAttempts++;
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('visible');
+    }
+
+    function actuallyHangUp() {
+      // Reset everything
+      clearInterval(timerInterval);
+      clearInterval(announcementInterval);
+      clearInterval(queueInterval);
+      clearInterval(eqInterval);
+      seconds = 0;
+      hangUpAttempts = 0;
+      queuePos = 14;
+
+      document.getElementById('modal').classList.remove('visible');
+      document.getElementById('hold-screen').style.display = 'none';
+      document.getElementById('timer').textContent = '00:00:00';
+      document.getElementById('spotify-player').src = '';
+      document.getElementById('landing').style.display = 'flex';
+
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+    }
+
+    // Preload voices
+    if ('speechSynthesis' in window) {
+      speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+    }
+  </script>
+</body>
+</html>
